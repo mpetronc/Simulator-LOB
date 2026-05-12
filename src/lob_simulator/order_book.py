@@ -106,6 +106,18 @@ class OrderBook:
             "trade_count": len(self.trades),
         }
 
+    def levels(self, side: Side, depth: int = 5) -> list[dict[str, int]]:
+        book = self.bids if side == "buy" else self.asks
+        prices = sorted(book, reverse=(side == "buy"))[:depth]
+        return [
+            {
+                "price": price,
+                "quantity": sum(order.quantity for order in book[price]),
+                "orders": len(book[price]),
+            }
+            for price in prices
+        ]
+
     def _match_incoming(self, incoming: Order) -> None:
         opposite_book = self.asks if incoming.side == "buy" else self.bids
         should_cross = (
@@ -143,4 +155,3 @@ class OrderBook:
         book = self.bids if order.side == "buy" else self.asks
         book[order.price].append(order)
         self.order_lookup[order.order_id] = (order.side, order.price)
-
